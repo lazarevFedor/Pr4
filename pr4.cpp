@@ -1,31 +1,55 @@
 #include <iostream>
 #include <fstream>
 #include "Windows.h"
-#include <cstring>
 #include "string.h"
 #undef max
 using namespace std;
-const int sizeArr = 750;
+const int sizeArr = 500;
+const int strLenght = 50;
+const int wordLenght = 10;
+char numbers[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
 void clearStream() {
 	cin.clear();
 	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
+//Пунктуационные функции
+int isNumber(char x) {
+	for (int i = 0; i < strlen(numbers); i++) {
+		if (x == numbers[i]) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
-//int countWords(char str[sizeArr]) {
-//	int count = 0;
-//	bool endWord = false;
-//	for (int i = 0; i < strlen(str); i++) {
-//		if (str[i] == ' ' && !endWord) {
-//			count++;
-//			endWord = true;
-//		}
-//		else if (ispunct(str[i])) {
-//			endWord = false;
-//		}
-//	}
-//	return count;
-//}
+int isLower(char x) {
+	if (x >= 'а' && x <= 'я') return 1;
+	if (x >= 'a' && x <= 'z') return 1;
+	else  return 0;
+}
+
+int isSpace(char x) {
+	if (x == ' ')    return 1;
+	else  return 0;
+}
+
+int isPunct(char x) {
+	if (x >= '!' && x <= '/' || x >= ':' && x <= '@' || x >= '[' && x <= '`' || x >= '{' && x <= '~') return 1;
+	else  return 0;
+}
+
+char toLower(char x) {
+	if (x >= 'A' && x <= 'Z') {
+		x += 26;
+		return x;
+	}
+	if (x >= 'А' && x <= 'Я') {
+		x += 32;
+		return x;
+	}
+}
+
 
 void delChar(int pos, char str[sizeArr]) {
 	for (int i = pos; i < strlen(str); i++) {
@@ -36,44 +60,64 @@ void delChar(int pos, char str[sizeArr]) {
 
 void edit(char str[sizeArr]) {
 	for (int i = 0; i < strlen(str); i++) {
-		while (isspace(str[i]) && str[i] == str[i + 1]) {
+		while (isSpace(str[i]) && str[i] == str[i + 1]) {
 			delChar((i + 1), str);
 		}
-		if (!islower(str[i])) {
-			str[i] = tolower(str[i]);
+		if (!isLower(str[i]) && i != 0){
+			str[i] = toLower(str[i]);
 		}
-		while (ispunct(str[i]) && str[i] == str[i + 1]) {
+		while (isPunct(str[i]) && str[i] == str[i + 1]) {
 			delChar((i + 1), str);
 		}
 	}
 }
 
-void mergeWords(char words[75][10], int count, char* str) {
+void mergeWords(char words[strLenght][wordLenght], int count, char* str) {
 	str[0] = '\0';
 
 	for (int i = 0; i < count; i++) {
-		strcat_s(str, 750, words[i]);
+		strcat_s(str, sizeArr, words[i]);
 
 		if (i != count - 1) {
-			strcat_s(str, 750, " ");
+			strcat_s(str, sizeArr, " ");
 		}
 	}
 }
 
-void sortWords(char str[sizeArr]){
-	char words[75][10];
-	int count = 0;
-	char* context = nullptr;
-	char* token = nullptr;
-	token = strtok_s(str, " ", &context);
-	while (token != nullptr && count < 75) {
-		strcpy_s(words[count++], token);
-		token = strtok_s(nullptr, " ", &context);
+int split(char str[sizeArr], char words[50][10]) {
+	int wordsCount = 0;
+	int wordIndex = 0;
+	int wordLength = 0;
+	for (int i = 0; i < strlen(str); i++) {
+		if (str[i] == ' ') {
+			words[wordIndex][wordLength] = '\0';
+			wordIndex++;
+			wordsCount++;
+			wordLength = 0;
+		}
+		else {
+			words[wordIndex][wordLength] = str[i];
+			wordLength++;
+		}
 	}
+	words[wordIndex][wordLength] = '\0';
+	wordsCount++;
+	return wordsCount;
+}
+
+int strСmp(const char* a, const char* b) {
+	while (*a && *b && *a == *b)
+		++a, ++b;
+	return *a - *b;
+}
+
+void sortWords(char str[sizeArr]) {
+	char words[strLenght][wordLenght];
+	int count = split(str, words);
 	for (int i = 0; i < count - 1; i++) {
 		for (int j = i + 1; j < count; j++) {
-			if (strcmp(words[i], words[j]) > 0) {
-				char temp[10];
+			if (strСmp(words[i], words[j]) > 0) {
+				char temp[wordLenght];
 				strcpy_s(temp, words[i]);
 				strcpy_s(words[i], words[j]);
 				strcpy_s(words[j], temp);
@@ -84,37 +128,40 @@ void sortWords(char str[sizeArr]){
 }
 
 
-void toLat(char str[sizeArr]) {
+void toLatin(char str[sizeArr]) {
 	for (int i = 0; i < strlen(str); i++) {
-		if (isdigit(str[i])) {
+		if (isNumber(str[i])) {
 			str[i] += '1';
-			cout << "\n" <<str[i];
 		}
 	}
 }
 
-int linearSearch(char* str) {
-	char pattern [10];
+
+void linearS(char* str) {
+	char pattern[wordLenght];
+	int count = 0;
 	cout << "\nВведите подстроку\n-->> ";
 	clearStream();
-	cin.getline(pattern, 10);
-	int n = strlen(str);
-	int m = strlen(pattern); // длина подстроки
-
-	for (int i = 0; i <= n - m; i++) {
+	cin.getline(pattern, wordLenght);
+	int strL = strlen(str);
+	int patL = strlen(pattern);
+	for (int i = 0; i <= strL - patL; i++) {
 		int j;
-		for (j = 0; j < m; j++) {
+		for (j = 0; j < patL; j++) {
 			if (str[i + j] != pattern[j])
 				break;
 		}
-		if (j == m) // если все символы совпали
-			return i; // вернуть индекс начала подстроки
+		if (j == patL) {
+			count++;
+			cout << "Подстрока найдена под индексом " << i << "\n";
+		}
 	}
-
-	return -1;
+	if (count == 0) {
+		cout << "Подстрока не найдена\n";
+	}
 }
 
-int main() {
+int main4() {
 	setlocale(LC_ALL, "Russian");
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
@@ -137,8 +184,7 @@ int main() {
 				"2) Отсортировать строку\n" <<
 				"3) Заменить цифры буквами\n" <<
 				"4) Линейный поиск\n" <<
-				"5) Бойера-Мура\n" <<
-				"6) Выход в главное меню\n-->> ";
+				"5) Выход в главное меню\n-->> ";
 			cin >> choise;
 			if (choise == 1) {
 				edit(str);
@@ -149,103 +195,81 @@ int main() {
 				cout << "\nОтсортированная строка:\n" << str << "\n";
 			}
 			else if (choise == 3) {
-				toLat(str);
+				toLatin(str);
 				cout << "\nНовая строка:\n" << str << "\n";
 			}
 			else if (choise == 4) {
-				int result = linearSearch(str);
-				if (result == -1)
-					cout << "Подстрока не найдена" << endl;
-				else
-					cout << "Подстрока найдена в позиции: " << result << endl;
+				linearS(str);
 			}
 			else if (choise == 5) {
-
-			}
-			else if (choise == 6) {
-				exit(0);
+				return 0;
 			}
 			else {
 				cout << "\nНеправильный ввод\n";
 			}
 		}
-		
+
 	}
 	else if (choise == 2) {
 		char c;
+		int n = 0;
+		fin.open("First.txt");
+		while (fin.get(c)) {
+			str[n] = c;
+			++n;
+		}
+		str[n] = '\0';
+		fin.close();
 		while (true) {
 			cout << "\nМеню:\n" <<
 				"1) Отредактировать строку\n" <<
 				"2) Отсортировать строку\n" <<
 				"3) Заменить цифры буквами\n" <<
 				"4) Линейный поиск\n" <<
-				"5) Бойера-Мура\n" <<
-				"6) Выход в главное меню\n-->> ";
+				"5) Выход в главное меню\n-->> ";
 			cin >> choise;
 			if (choise == 1) {
-				int n = 0;
-				fin.open("File.txt");
-				while (fin.get(c)){
-					str[n] = c;
-					++n;
-				}
-				str[n] = '\0';
-				fout.open("File.txt");
 				edit(str);
-				fout << str;
-				fin.close();
-				fout.close();
 				cout << "\nОтредактированная строка:\n" << str << "\n";
 			}
-			else if (choise == 2){
-				int n = 0;
-				fin.open("File.txt");
-				while (fin.get(c)) {
-					str[n] = c;
-					++n;
-				}
-				str[n] = '\0';
-				fout.open("File.txt");
+			else if (choise == 2) {
 				sortWords(str);
-				fout << str;
-				fin.close();
-				fout.close();
 				cout << "\nОтсортированная строка:\n" << str << "\n";
+				fout.open("First.txt");
+				fout << str;
+				fout.close();
 			}
 			else if (choise == 3) {
 				int n = 0;
-				fin.open("File.txt");
+				fin.open("Second.txt");
 				while (fin.get(c)) {
 					str[n] = c;
 					++n;
 				}
 				str[n] = '\0';
-				fout.open("File.txt");
-				toLat(str);
-				fout << str;
 				fin.close();
+				toLatin(str);
+				fout.open("Second.txt");
+				fout << str;
 				fout.close();
 				cout << "\nНовая строка:\n" << str << "\n";
 			}
 			else if (choise == 4) {
 				int n = 0;
-				fin.open("File.txt");
+				fin.open("First.txt");
 				while (fin.get(c)) {
 					str[n] = c;
 					++n;
 				}
 				str[n] = '\0';
-				int result = linearSearch(str);
-				if (result == -1)
-					cout << "Подстрока не найдена" << endl;
-				else
-					cout << "Подстрока найдена в позиции: " << result << endl;
+				fin.close();
+				linearS(str);
 			}
 			else if (choise == 5) {
-
-			}
-			else if (choise == 6) {
-				exit(0);
+				fout.open("First.txt");
+				fout << str;
+				fout.close();
+				return 0;
 			}
 			else {
 				cout << "\nНеправильный ввод\n";
